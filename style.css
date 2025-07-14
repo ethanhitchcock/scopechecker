@@ -2,16 +2,24 @@
 
 :root {
     /* Palette */
-    --background-primary: #F7F6F3;
+    --background-primary: #F8F9FA; /* Lighter gray for a cleaner look */
     --background-secondary: #FFFFFF;
-    --background-tertiary: #F0EFEC;
-    --text-primary: #1A1A1A;
-    --text-secondary: #4F4F4F;
-    --text-muted: #A0A0A0;
-    --accent-primary: #C74F2B;
-    --accent-muted: #F8EAE6;
-    --border-light: #E0DFDC;
-    --card-shadow: rgba(0, 0, 0, 0.05);
+    --background-tertiary: #E9ECEF;
+    --text-primary: #212529;
+    --text-secondary: #495057;
+    --text-muted: #6C757D;
+    --accent-primary: #007AFF;   /* Primary Blue */
+    --accent-muted: #E5F2FF;     /* Light Blue */
+    --border-light: #DEE2E6;
+    --card-shadow: rgba(0, 0, 0, 0.04);
+    
+    /* Semantic Colors */
+    --success-bg: #E3FCEC;
+    --success-text: #0E995D;
+    --warning-bg: #FFF8E1;
+    --warning-text: #B7950B;
+    --info-bg: var(--accent-muted); /* Using light blue for info */
+    --info-text: var(--accent-primary);
 
     /* Typography */
     --font-family: 'Inter', -apple-system, system-ui, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
@@ -263,7 +271,7 @@ input[type="date"]:focus {
 }
 
 .btn-primary:hover {
-    background-color: #A63B1F; /* A darker shade of accent for hover */
+    background-color: #0056b3; /* A darker shade of blue for hover */
 }
 
 .btn-secondary {
@@ -273,7 +281,7 @@ input[type="date"]:focus {
 }
 
 .btn-secondary:hover {
-    background-color: #E0DFDC; /* A darker shade of tertiary for hover */
+    background-color: #DDE1E4; /* A darker shade of tertiary for hover */
 }
 
 /* --- Result Display --- */
@@ -376,19 +384,19 @@ input[type="date"]:focus {
 }
 
 #result-content .critical-item {
-    background-color: #FADBD8;
-    color: #C0392B;
+    background-color: var(--info-bg);
+    color: var(--info-text);
     font-weight: var(--fw-bold);
 }
 
 #result-content .warning-item {
-    background-color: #FEF9E7;
-    color: #B7950B;
+    background-color: var(--warning-bg);
+    color: var(--warning-text);
 }
 
 #result-content .ok-item {
-    background-color: #E8F8F5;
-    color: #1ABC9C;
+    background-color: var(--success-bg);
+    color: var(--success-text);
 }
 
 .result-footer {
@@ -401,7 +409,7 @@ input[type="date"]:focus {
 }
 
 .result-footer .email-success {
-    color: var(--success-color);
+    color: var(--success-text);
     font-size: var(--fs-small);
     font-weight: 500;
 }
