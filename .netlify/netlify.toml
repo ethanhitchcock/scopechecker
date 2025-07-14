@@ -1,0 +1,30 @@
+functionsDirectory = "C:\\Users\\ethan\\Documents\\Scope Referral tool\\netlify\\functions"
+functionsDirectoryOrigin = "config"
+plugins = []
+headers = []
+redirects = []
+
+[build]
+publish = "C:\\Users\\ethan\\Documents\\Scope Referral tool"
+publishOrigin = "config"
+commandOrigin = "config"
+command = "echo 'No build command required'"
+functions = "C:\\Users\\ethan\\Documents\\Scope Referral tool\\netlify\\functions"
+
+[build.environment]
+
+[build.processing]
+
+[build.processing.css]
+
+[build.processing.html]
+
+[build.processing.images]
+
+[build.processing.js]
+
+[build.services]
+
+[functions]
+
+[functions."*"]

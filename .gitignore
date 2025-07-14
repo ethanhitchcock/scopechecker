@@ -1,8 +1,6 @@
-# Dependencies
-/node_modules
-
-# Environment Variables
+*.pdf
+*.log
 .env
-
-# Build artifacts
-.netlify 
+node_modules/
+netlify/functions/node_modules/
+package-lock.json 
