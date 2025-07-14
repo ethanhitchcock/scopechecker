@@ -292,7 +292,7 @@ input[type="date"]:focus {
 #result-content h3 {
     font-size: var(--fs-title);
     color: var(--text-primary);
-    margin-bottom: var(--space-lg);
+    margin-bottom: 0; /* Adjust as needed */
     display: flex;
     align-items: center;
     font-weight: var(--fw-bold);
@@ -308,6 +308,13 @@ input[type="date"]:focus {
     align-items: center;
     justify-content: center;
     border-radius: 50%;
+}
+
+#result-content .reference-number {
+    font-size: var(--fs-small);
+    color: var(--text-secondary);
+    margin-top: var(--space-xs);
+    margin-bottom: var(--space-lg);
 }
 
 #result-content h4 {
@@ -385,8 +392,22 @@ input[type="date"]:focus {
 }
 
 .result-footer {
-    padding: 0 var(--space-lg) var(--space-lg) var(--space-lg);
     text-align: right;
+    padding: var(--space-sm) var(--space-md);
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.result-footer .email-success {
+    color: var(--success-color);
+    font-size: var(--fs-small);
+    font-weight: 500;
+}
+
+#debug-btn {
+    margin-left: auto;
 }
 
 .result-footer .btn {

@@ -4,6 +4,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const resultContentEl = document.getElementById('result-content');
     const resultFooter = document.querySelector('.result-footer');
     const debugBtn = document.getElementById('debug-btn');
+    const emailSuccessEl = document.getElementById('email-success-notification');
     const surveillanceRadios = document.querySelectorAll('input[name="surveillance"]');
     const lastScopeContainer = document.getElementById('last-scope-container');
     const bowelPrepContainer = document.getElementById('bowel-prep-container');
@@ -33,6 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
     form.addEventListener('reset', () => {
         resultContainer.style.display = 'none';
         resultFooter.style.display = 'none';
+        emailSuccessEl.style.display = 'none';
         bowelPrepContainer.style.display = 'none';
         lastScopeContainer.style.display = 'none';
         const defaultRadios = form.querySelectorAll('input[type="radio"][checked]');
@@ -69,6 +71,7 @@ document.addEventListener('DOMContentLoaded', () => {
             info += `${key}: ${value}\n`;
         }
         info += "\n--- OUTPUT ---\n";
+        info += `Reference #: ${output.ref}\n`;
         info += `Category: ${output.category}\n`;
         info += `Emoji: ${output.emoji}\n\n`;
         info += "Reasons:\n";
@@ -103,6 +106,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const ecog = parseInt(data.ecog, 10);
 
         const result = {
+            ref: generateReference(),
             category: '',
             emoji: '',
             reasons: new Set(), // Use a Set to avoid duplicate reasons
@@ -195,7 +199,9 @@ document.addEventListener('DOMContentLoaded', () => {
             <h3>
                 <span class="emoji">${result.emoji}</span>
                 ${result.category}
-            </h3>`;
+            </h3>
+            <p class="reference-number">Ref: ${result.ref}</p>
+            `;
 
         if (result.reasons.length > 0) {
             html += '<h4>Clinical Rationale</h4><ul>';
@@ -228,6 +234,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const endpoint = '/.netlify/functions/send-email';
 
         const dataToSend = {
+            ref: result.ref,
             category: result.category,
             reasons: Array.from(result.reasons), // Ensure reasons is an array
             fitness: result.fitness,
@@ -245,13 +252,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (response.ok) {
                 console.log('Email notification sent successfully.');
-                // You could optionally add a small success message to the UI here
+                emailSuccessEl.textContent = `Email sent for referral #${result.ref}.`;
+                emailSuccessEl.style.display = 'block';
             } else {
                 const errorData = await response.json();
                 console.error('Failed to send email notification:', response.statusText, errorData);
+                emailSuccessEl.textContent = 'Email failed to send.';
+                emailSuccessEl.style.display = 'block';
             }
         } catch (error) {
             console.error('Error calling email function:', error);
         }
+    }
+
+    // --- Helpers ---
+    function generateReference() {
+        const timestamp = Date.now().toString(36).slice(-4).toUpperCase();
+        const randomPart = Math.random().toString(36).substring(2, 4).toUpperCase();
+        return `${timestamp}${randomPart}`;
     }
 }); 
