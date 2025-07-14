@@ -111,13 +111,13 @@ ${createBulletedList(fitnessAssessment)}
     const htmlBody = `
         <body style="font-family: sans-serif; color: #333; line-height: 1.6;">
             <p>A new referral has been processed.</p>
-            <p><strong>Reference:</strong> ${ref} | <strong>Completed:</strong> ${completionDate}</p>
+            <p><strong>Reference: #</strong>${ref} </p>
+            <p><strong>Completed:</strong> ${completionDate}</p>
             
             <hr>
             
-            <h3>Referral Outcome</h3>
+            <h3>Referral Outcome: <strong>${category}.</strong></h3>
             <p>
-                <strong>${category}.</strong><br>
                 <strong>Rationale:</strong> ${reasons.join(', ')}.<br>
                 <strong>Fitness:</strong> ${fitness.map(f => f.text).join(', ')}.
             </p>
