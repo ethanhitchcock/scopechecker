@@ -20,7 +20,7 @@ exports.handler = async function(event, context) {
         minute: '2-digit', 
         second: '2-digit',
         hour12: false,
-        timeZone: 'America/Edmonton' 
+        timeZone: 'Africa/Johannesburg'
     }).replace(/, /g, ' ');
 
 
@@ -92,16 +92,12 @@ exports.handler = async function(event, context) {
     const subject = `New Scope Referral [Ref: ${ref}] - ${category}`;
     const textBody = `
 A new referral has been processed.
-Reference #: ${ref}
-Completion Time: ${completionDate}
+Reference: ${ref} | Completed: ${completionDate}
 
 --- REFERRAL OUTCOME ---
-Category: ${category}
-Clinical Rationale:
-- ${reasons.join('\n- ')}
-
-Fitness Summary:
-- ${fitness.map(f => f.text).join('\n- ')}
+${category}. 
+Rationale: ${reasons.join(', ')}. 
+Fitness: ${fitness.map(f => f.text).join(', ')}.
 
 --- PATIENT DETAILS ---
 ${createBulletedList(patientDetails)}
@@ -115,19 +111,16 @@ ${createBulletedList(fitnessAssessment)}
     const htmlBody = `
         <body style="font-family: sans-serif; color: #333; line-height: 1.6;">
             <p>A new referral has been processed.</p>
-            <p><strong>Reference #:</strong> ${ref}</p>
-            <p><strong>Completion Time:</strong> ${completionDate}</p>
+            <p><strong>Reference:</strong> ${ref} | <strong>Completed:</strong> ${completionDate}</p>
             
             <hr>
             
             <h3>Referral Outcome</h3>
-            <p><strong>Category:</strong> ${category}</p>
-            
-            <h4>Clinical Rationale</h4>
-            <ul>${reasons.map(r => `<li>${r}</li>`).join('')}</ul>
-            
-            <h4>Fitness Summary</h4>
-            <ul>${fitness.map(f => `<li>${f.text}</li>`).join('')}</ul>
+            <p>
+                <strong>${category}.</strong><br>
+                <strong>Rationale:</strong> ${reasons.join(', ')}.<br>
+                <strong>Fitness:</strong> ${fitness.map(f => f.text).join(', ')}.
+            </p>
             
             <hr>
 
