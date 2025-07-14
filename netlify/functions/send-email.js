@@ -24,32 +24,46 @@ exports.handler = async function(event, context) {
     }).replace(/, /g, ' ');
 
 
-    // --- Filter for Notable Inputs & Combine All Inputs ---
-    const allInputs = {
-        age: inputs.age,
-        sex: inputs.sex,
+    // --- Section out patient data for clarity ---
+    const patientDetails = {
+        Age: inputs.age,
+        Sex: inputs.sex,
     };
 
-    if (inputs.rectal_bleeding === 'Yes') allInputs.rectal_bleeding = 'Yes';
-    if (inputs.bowel_habit === 'Yes') allInputs.bowel_habit = 'Yes';
-    if (inputs.ida === 'Yes') allInputs.ida = 'Yes';
-    if (inputs.weightloss === 'Yes') allInputs.weightloss = 'Yes';
-    if (inputs.polyp === 'Yes') allInputs.polyp = 'Yes';
-    if (inputs.ibd === 'Yes') allInputs.ibd = 'Yes';
+    const patientSymptoms = {};
+    if (inputs.rectal_bleeding === 'Yes') patientSymptoms['Rectal bleeding'] = 'Yes';
+    if (inputs.bowel_habit === 'Yes') patientSymptoms['Change in bowel habit'] = 'Yes';
+    if (inputs.ida === 'Yes') patientSymptoms['Iron deficiency anemia'] = 'Yes';
+    if (inputs.weightloss === 'Yes') patientSymptoms['Unexplained weightloss'] = 'Yes';
+    if (inputs.polyp === 'Yes') patientSymptoms['History of polyps'] = 'Yes';
+    if (inputs.ibd === 'Yes') patientSymptoms['History of IBD'] = 'Yes';
     if (inputs.surveillance === 'Yes') {
-        allInputs.surveillance = 'Yes';
-        if(inputs.last_scope_date) allInputs.last_scope_date = inputs.last_scope_date;
+        patientSymptoms['Post-surgical surveillance'] = 'Yes';
+        if(inputs.last_scope_date) patientSymptoms['Date of last scope'] = inputs.last_scope_date;
     }
-    if (inputs.family !== 'no') allInputs.family = inputs.family;
+    if (inputs.family !== 'no') patientSymptoms['Family history'] = inputs.family;
 
-    // Merge fitness data
-    Object.assign(allInputs, {
-        cognition: inputs.cognition,
-        comorbidity: inputs.comorbidity,
-        prep: inputs.prep,
-        sedation: inputs.sedation,
-        ecog: inputs.ecog
-    });
+    const fitnessAssessment = {
+        'Adequate cognition': inputs.cognition,
+        'Significant comorbidity': inputs.comorbidity,
+        'Requires bowel prep assistance': inputs.prep,
+        'Requires sedation resources': inputs.sedation,
+        'ECOG score': inputs.ecog
+    };
+    
+    // Helper to generate bullet points for non-empty objects
+    const createBulletedList = (data) => {
+        const entries = Object.entries(data);
+        if (entries.length === 0) return 'None';
+        return entries.map(([key, value]) => `- ${key}: ${value}`).join('\n');
+    };
+
+    const createHtmlList = (data) => {
+        const entries = Object.entries(data);
+        if (entries.length === 0) return '<li>None</li>';
+        return entries.map(([key, value]) => `<li><strong>${key}:</strong> ${value}</li>`).join('');
+    };
+
 
     // --- IMPORTANT: Securely configure your email credentials ---
     // In Netlify, set these as environment variables in your site's settings.
@@ -90,10 +104,16 @@ Fitness Summary:
 - ${fitness.map(f => f.text).join('\n- ')}
 
 --- PATIENT DETAILS ---
-${Object.entries(allInputs).map(([key, value]) => `${key.replace(/_/g, ' ')}: ${value}`).join('\n')}
+${createBulletedList(patientDetails)}
+
+--- SYMPTOMS & HISTORY ---
+${createBulletedList(patientSymptoms)}
+
+--- FITNESS ASSESSMENT ---
+${createBulletedList(fitnessAssessment)}
     `;
     const htmlBody = `
-        <body style="font-family: sans-serif; color: #333;">
+        <body style="font-family: sans-serif; color: #333; line-height: 1.6;">
             <p>A new referral has been processed.</p>
             <p><strong>Reference #:</strong> ${ref}</p>
             <p><strong>Completion Time:</strong> ${completionDate}</p>
@@ -104,28 +124,21 @@ ${Object.entries(allInputs).map(([key, value]) => `${key.replace(/_/g, ' ')}: ${
             <p><strong>Category:</strong> ${category}</p>
             
             <h4>Clinical Rationale</h4>
-            <ul>
-                ${reasons.map(r => `<li>${r}</li>`).join('')}
-            </ul>
+            <ul>${reasons.map(r => `<li>${r}</li>`).join('')}</ul>
             
             <h4>Fitness Summary</h4>
-            <ul>
-                ${fitness.map(f => `<li>${f.text}</li>`).join('')}
-            </ul>
+            <ul>${fitness.map(f => `<li>${f.text}</li>`).join('')}</ul>
             
             <hr>
-            
+
             <h3>Patient Details</h3>
-            <table style="width: 100%; border-collapse: collapse;">
-                <tbody>
-                    ${Object.entries(allInputs).map(([key, value]) => `
-                        <tr>
-                            <td style="padding: 4px 8px; border: 1px solid #ddd; text-transform: capitalize;">${key.replace(/_/g, ' ')}</td>
-                            <td style="padding: 4px 8px; border: 1px solid #ddd;">${value}</td>
-                        </tr>
-                    `).join('')}
-                </tbody>
-            </table>
+            <ul>${createHtmlList(patientDetails)}</ul>
+
+            <h3>Symptoms & History</h3>
+            <ul>${createHtmlList(patientSymptoms)}</ul>
+
+            <h3>Fitness Assessment</h3>
+            <ul>${createHtmlList(fitnessAssessment)}</ul>
         </body>
     `;
 
