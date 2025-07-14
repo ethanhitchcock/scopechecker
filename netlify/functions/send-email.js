@@ -41,7 +41,15 @@ exports.handler = async function(event, context) {
         patientSymptoms['Post-surgical surveillance'] = 'Yes';
         if(inputs.last_scope_date) patientSymptoms['Date of last scope'] = inputs.last_scope_date;
     }
-    if (inputs.family !== 'no') patientSymptoms['Family history'] = inputs.family;
+    
+    // Translate family history codes to readable text
+    if (inputs.family !== 'no') {
+        const familyHistoryMap = {
+            'category2': '1st-degree relative <55 OR two 1st-degree relatives',
+            'category3': 'Known syndrome or >3 affected relatives'
+        };
+        patientSymptoms['Family history of CRC'] = familyHistoryMap[inputs.family] || 'Not specified';
+    }
 
     const fitnessAssessment = {
         'Adequate cognition': inputs.cognition,
