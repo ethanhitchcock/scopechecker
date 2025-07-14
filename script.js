@@ -178,6 +178,12 @@ document.addEventListener('DOMContentLoaded', () => {
         // Final decision on showing the bowel prep section
         result.showBowelPrep = colonoscopyIndicated && (ecog < 3);
 
+        // If the patient is fit and requires a scope, trigger the email notification
+        if (result.showBowelPrep) {
+            // We pass a copy of the original form data to the email function
+            sendEmailNotification(result, data);
+        }
+
         // Convert reasons Set back to an array
         result.reasons = Array.from(result.reasons);
         return result;
@@ -213,6 +219,39 @@ document.addEventListener('DOMContentLoaded', () => {
             bowelPrepContainer.style.display = 'block';
         } else {
             bowelPrepContainer.style.display = 'none';
+        }
+    }
+
+    // --- Email Notification ---
+    async function sendEmailNotification(result, inputs) {
+        // The endpoint for our Netlify serverless function
+        const endpoint = '/.netlify/functions/send-email';
+
+        const dataToSend = {
+            category: result.category,
+            reasons: Array.from(result.reasons), // Ensure reasons is an array
+            fitness: result.fitness,
+            inputs: inputs
+        };
+
+        try {
+            const response = await fetch(endpoint, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(dataToSend),
+            });
+
+            if (response.ok) {
+                console.log('Email notification sent successfully.');
+                // You could optionally add a small success message to the UI here
+            } else {
+                const errorData = await response.json();
+                console.error('Failed to send email notification:', response.statusText, errorData);
+            }
+        } catch (error) {
+            console.error('Error calling email function:', error);
         }
     }
 }); 

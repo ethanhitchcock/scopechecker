@@ -1,0 +1,9 @@
+[build]
+  # This command is not strictly necessary for a static site, but it's good practice.
+  command = "echo 'No build command required'"
+  # This is the directory that contains the deploy-ready HTML files and assets.
+  publish = "."
+
+[functions]
+  # This is the directory where we will store our serverless functions.
+  directory = "netlify/functions" 

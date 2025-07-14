@@ -17,28 +17,51 @@ This is a web-based clinical decision support tool designed to help healthcare p
 
 ## How to Use
 
-This is a client-side application built with HTML, CSS, and JavaScript. It can be run locally using any simple web server.
+This is a client-side application that can be run locally using any simple web server. The production version uses Netlify Functions to handle email notifications.
 
-1.  **Ensure you have Python installed.** Python 3 is recommended.
+### Local Development
 
-2.  **Navigate to the project directory** in your terminal:
-    ```bash
-    cd "Scope Referral tool"
-    ```
-
+1.  **Ensure you have Python installed.** Python 3 is recommended for running a simple local server.
+2.  **Navigate to the project directory** in your terminal.
 3.  **Start a local web server:**
     ```bash
     python -m http.server
     ```
-
 4.  **Open the tool in your browser:**
     Navigate to [http://localhost:8000](http://localhost:8000)
 
-5.  **Fill out the form** with the patient's details and click the "Assess Referral" button to see the outcome.
+### Deployment
+
+This project is configured for easy deployment to [Netlify](https://www.netlify.com/).
+
+1.  **Install the Netlify CLI:**
+    ```bash
+    npm install netlify-cli -g
+    ```
+2.  **Login to your Netlify account:**
+    ```bash
+    netlify login
+    ```
+3.  **Deploy the site:**
+    ```bash
+    netlify deploy --prod
+    ```
+    Follow the prompts to create and configure a new site.
+
+4.  **Configure Environment Variables for Email:**
+    - Go to your new site's settings on Netlify.
+    - Navigate to **Site settings > Build & deploy > Environment**.
+    - Add the following environment variables:
+        - `GMAIL_USER`: Your full Gmail address used for sending notifications.
+        - `GMAIL_APP_PASSWORD`: A 16-character [Google App Password](https://support.google.com/accounts/answer/185833) for your account.
+    - Trigger a new deploy from the "Deploys" tab for the variables to take effect.
 
 ## File Structure
 
 -   `index.html`: The main HTML file containing the structure of the referral form and result display areas.
 -   `style.css`: The stylesheet that defines the visual appearance, layout, and responsive design of the tool.
--   `script.js`: Contains all the client-side logic, including the core `assessReferral` function for triage, event handling, and dynamic UI updates.
+-   `script.js`: Contains all the client-side logic, including the core `assessReferral` function, UI updates, and the call to the email notification function.
+-   `netlify/functions/send-email.js`: The serverless function that handles sending email notifications using Nodemailer.
+-   `netlify.toml`: Configuration file for deploying the site and its functions to Netlify.
+-   `package.json`: Defines the backend dependencies for the serverless function.
 -   `README.md`: This file. 
