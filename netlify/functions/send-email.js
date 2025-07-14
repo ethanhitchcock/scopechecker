@@ -10,33 +10,46 @@ exports.handler = async function(event, context) {
 
     const referralData = JSON.parse(event.body);
     const { ref, category, reasons, fitness, inputs } = referralData;
+    
+    // --- Generate Timestamp ---
+    const completionDate = new Date().toLocaleString('en-CA', { 
+        year: 'numeric', 
+        month: '2-digit', 
+        day: '2-digit', 
+        hour: '2-digit', 
+        minute: '2-digit', 
+        second: '2-digit',
+        hour12: false,
+        timeZone: 'America/Edmonton' 
+    }).replace(/, /g, ' ');
 
-    // --- Filter for Notable Inputs ---
-    const notableInputs = {};
-    // Always include demographics
-    notableInputs.age = inputs.age;
-    notableInputs.sex = inputs.sex;
 
-    if (inputs.rectal_bleeding === 'Yes') notableInputs.rectal_bleeding = 'Yes';
-    if (inputs.bowel_habit === 'Yes') notableInputs.bowel_habit = 'Yes';
-    if (inputs.ida === 'Yes') notableInputs.ida = 'Yes';
-    if (inputs.weightloss === 'Yes') notableInputs.weightloss = 'Yes';
-    if (inputs.polyp === 'Yes') notableInputs.polyp = 'Yes';
-    if (inputs.ibd === 'Yes') notableInputs.ibd = 'Yes';
+    // --- Filter for Notable Inputs & Combine All Inputs ---
+    const allInputs = {
+        age: inputs.age,
+        sex: inputs.sex,
+    };
+
+    if (inputs.rectal_bleeding === 'Yes') allInputs.rectal_bleeding = 'Yes';
+    if (inputs.bowel_habit === 'Yes') allInputs.bowel_habit = 'Yes';
+    if (inputs.ida === 'Yes') allInputs.ida = 'Yes';
+    if (inputs.weightloss === 'Yes') allInputs.weightloss = 'Yes';
+    if (inputs.polyp === 'Yes') allInputs.polyp = 'Yes';
+    if (inputs.ibd === 'Yes') allInputs.ibd = 'Yes';
     if (inputs.surveillance === 'Yes') {
-        notableInputs.surveillance = 'Yes';
-        if(inputs.last_scope_date) notableInputs.last_scope_date = inputs.last_scope_date;
+        allInputs.surveillance = 'Yes';
+        if(inputs.last_scope_date) allInputs.last_scope_date = inputs.last_scope_date;
     }
-    if (inputs.family !== 'no') notableInputs.family = inputs.family;
+    if (inputs.family !== 'no') allInputs.family = inputs.family;
 
-    // Always include fitness data as it's always notable
-    const fitnessInputs = {
+    // Merge fitness data
+    Object.assign(allInputs, {
         cognition: inputs.cognition,
         comorbidity: inputs.comorbidity,
         prep: inputs.prep,
         sedation: inputs.sedation,
         ecog: inputs.ecog
-    };
+    });
 
     // --- IMPORTANT: Securely configure your email credentials ---
     // In Netlify, set these as environment variables in your site's settings.
@@ -66,6 +79,7 @@ exports.handler = async function(event, context) {
     const textBody = `
 A new referral has been processed.
 Reference #: ${ref}
+Completion Time: ${completionDate}
 
 --- REFERRAL OUTCOME ---
 Category: ${category}
@@ -75,36 +89,44 @@ Clinical Rationale:
 Fitness Summary:
 - ${fitness.map(f => f.text).join('\n- ')}
 
---- NOTABLE PATIENT INPUTS ---
-${Object.entries(notableInputs).map(([key, value]) => `${key.replace(/_/g, ' ')}: ${value}`).join('\n')}
-
---- FITNESS ASSESSMENT DETAILS ---
-${Object.entries(fitnessInputs).map(([key, value]) => `${key}: ${value}`).join('\n')}
+--- PATIENT DETAILS ---
+${Object.entries(allInputs).map(([key, value]) => `${key.replace(/_/g, ' ')}: ${value}`).join('\n')}
     `;
     const htmlBody = `
-        <p>A new referral has been processed.</p>
-        <p><strong>Reference #: ${ref}</strong></p>
-        
-        <h3>Referral Outcome</h3>
-        <p><strong>Category:</strong> ${category}</p>
-        
-        <h4>Clinical Rationale</h4>
-        <ul>
-            ${reasons.map(r => `<li>${r}</li>`).join('')}
-        </ul>
-        
-        <h4>Fitness Summary</h4>
-        <ul>
-            ${fitness.map(f => `<li>${f.text}</li>`).join('')}
-        </ul>
-        
-        <hr>
-        
-        <h3>Notable Patient Inputs</h3>
-        <pre><code>${Object.entries(notableInputs).map(([key, value]) => `${key.replace(/_/g, ' ')}: ${value}`).join('\n')}</code></pre>
-
-        <h3>Fitness Assessment Details</h3>
-        <pre><code>${Object.entries(fitnessInputs).map(([key, value]) => `${key}: ${value}`).join('\n')}</code></pre>
+        <body style="font-family: sans-serif; color: #333;">
+            <p>A new referral has been processed.</p>
+            <p><strong>Reference #:</strong> ${ref}</p>
+            <p><strong>Completion Time:</strong> ${completionDate}</p>
+            
+            <hr>
+            
+            <h3>Referral Outcome</h3>
+            <p><strong>Category:</strong> ${category}</p>
+            
+            <h4>Clinical Rationale</h4>
+            <ul>
+                ${reasons.map(r => `<li>${r}</li>`).join('')}
+            </ul>
+            
+            <h4>Fitness Summary</h4>
+            <ul>
+                ${fitness.map(f => `<li>${f.text}</li>`).join('')}
+            </ul>
+            
+            <hr>
+            
+            <h3>Patient Details</h3>
+            <table style="width: 100%; border-collapse: collapse;">
+                <tbody>
+                    ${Object.entries(allInputs).map(([key, value]) => `
+                        <tr>
+                            <td style="padding: 4px 8px; border: 1px solid #ddd; text-transform: capitalize;">${key.replace(/_/g, ' ')}</td>
+                            <td style="padding: 4px 8px; border: 1px solid #ddd;">${value}</td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        </body>
     `;
 
     // --- Send Mail ---
