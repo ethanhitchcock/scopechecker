@@ -78,7 +78,7 @@ exports.handler = async function(event, context) {
     // In your local environment, create a .env file with these variables.
     const senderEmail = process.env.GMAIL_USER;
     const senderAppPassword = process.env.GMAIL_APP_PASSWORD;
-    const recipientEmail = "ethanhitchcock@gmail.com";
+    const recipientEmail = "ethanhitchcock@gmail.com, lukemiguel1995@gmail.com";
 
     if (!senderEmail || !senderAppPassword) {
         console.error("Email credentials are not configured in environment variables.");
