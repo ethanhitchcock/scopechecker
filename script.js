@@ -255,16 +255,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (response.ok) {
                 console.log('Email notification sent successfully.');
-                emailSuccessEl.textContent = `Email sent for referral #${result.ref}.`;
-                emailSuccessEl.style.display = 'block';
+                emailSuccessEl.innerHTML = `
+                    <h4>Email Sent</h4>
+                    <p>A referral summary for <strong>Ref: #${result.ref}</strong> has been sent.</p>
+                    <p><strong>Action Required:</strong> Please save this reference number for your records.</p>
+                `;
+                emailSuccessEl.className = 'email-success-notification visible';
             } else {
                 const errorData = await response.json();
                 console.error('Failed to send email notification:', response.statusText, errorData);
-                emailSuccessEl.textContent = 'Email failed to send.';
-                emailSuccessEl.style.display = 'block';
+                emailSuccessEl.innerHTML = '<h4>Error</h4><p>Email failed to send. Please copy the debug info and report the issue.</p>';
+                emailSuccessEl.className = 'email-success-notification error visible';
             }
         } catch (error) {
             console.error('Error calling email function:', error);
+            emailSuccessEl.innerHTML = '<h4>Error</h4><p>Could not contact email server. Please check your connection.</p>';
+            emailSuccessEl.className = 'email-success-notification error visible';
         }
     }
 

@@ -426,10 +426,41 @@ input[type="date"]:focus {
     gap: var(--space-md);
 }
 
-.result-footer .email-success {
+.email-success-notification {
+    display: none; /* Hidden by default */
+    width: 100%;
+    padding: var(--space-md);
+    margin-top: var(--space-md);
+    border-radius: var(--radius-md);
+    background-color: var(--success-bg);
     color: var(--success-text);
-    font-size: var(--fs-small);
-    font-weight: 500;
+    border: 1px solid var(--success-text);
+}
+
+.email-success-notification.visible {
+    display: block; /* Show it when the class is added */
+}
+
+.email-success-notification h4 {
+    margin-top: 0;
+    margin-bottom: var(--space-xs);
+    color: var(--success-text);
+    font-size: var(--fs-body);
+}
+
+.email-success-notification p {
+    margin: 0;
+    font-size: var(--fs-label);
+}
+
+.email-success-notification.error {
+    background-color: var(--accent-muted);
+    color: var(--accent-primary);
+    border-color: var(--accent-primary);
+}
+
+.email-success-notification.error h4 {
+    color: var(--accent-primary);
 }
 
 #debug-btn {
