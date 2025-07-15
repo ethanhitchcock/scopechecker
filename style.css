@@ -53,6 +53,10 @@
     --anim-normal: 300ms ease-in-out;
 }
 
+html {
+    scroll-behavior: smooth;
+}
+
 /* --- Base & Typography --- */
 * {
     box-sizing: border-box;
