@@ -159,7 +159,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 result.category = "Routine Surveillance Colonoscopy";
                 result.emoji = '🔵';
             } else {
-                result.category = "Does not meet direct access criteria";
+                result.category = "No Direct Access Procedure Indicated";
                 result.emoji = '⚪️';
                 result.reasons.add("Consider specialist review, GP follow-up or further monitoring.");
             }
@@ -195,8 +195,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- UI Display ---
     function displayResult(result) {
+        const isNotIndicated = result.category === "No Direct Access Procedure Indicated";
+        const headerClass = isNotIndicated ? 'result-header-not-indicated' : '';
+
         let html = `
-            <h3>
+            <h3 class="${headerClass}">
                 <span class="emoji">${result.emoji}</span>
                 ${result.category}
             </h3>
