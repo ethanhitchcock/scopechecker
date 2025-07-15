@@ -100,11 +100,11 @@ exports.handler = async function(event, context) {
     const subject = `New Scope Referral [Ref: ${ref}] - ${category}`;
     const textBody = `
 A new referral has been processed.
-Reference: ${ref} | Completed: ${completionDate}
+Reference: #${ref} | Completed: ${completionDate}
 
 --- REFERRAL OUTCOME ---
 ${category}. 
-Rationale: ${reasons.join(', ')}. 
+Rationale: ${reasons.join(', ')} 
 Fitness: ${fitness.map(f => f.text).join(', ')}.
 
 --- PATIENT DETAILS ---
@@ -119,14 +119,14 @@ ${createBulletedList(fitnessAssessment)}
     const htmlBody = `
         <body style="font-family: sans-serif; color: #333; line-height: 1.6;">
             <p>A new referral has been processed.</p>
-            <p><strong>Reference: #</strong>${ref} </p>
-            <p><strong>Completed:</strong> ${completionDate}</p>
+            <p><strong>Reference:</strong> #${ref} | <strong>Completed:</strong> ${completionDate}</p>
             
             <hr>
             
-            <h3>Referral Outcome: <strong>${category}.</strong></h3>
+            <h3>Referral Outcome</h3>
             <p>
-                <strong>Rationale:</strong> ${reasons.join(', ')}.<br>
+                <strong>${category}.</strong><br>
+                <strong>Rationale:</strong> ${reasons.join(', ')}<br>
                 <strong>Fitness:</strong> ${fitness.map(f => f.text).join(', ')}.
             </p>
             
