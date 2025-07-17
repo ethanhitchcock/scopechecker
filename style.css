@@ -747,3 +747,52 @@ input[type="radio"]:focus {
     font-size: var(--fs-label);
     padding: var(--space-xs) var(--space-sm);
 } 
+
+/* Mobile Buttons */
+.actions {
+    display: flex;
+    flex-direction: row;
+    gap: var(--space-sm);
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.actions button {
+    flex: 1;
+    min-width: 120px;
+    max-width: 200px;
+}
+
+/* Info Button Mobile Fix */
+@media (hover: none) {
+    .info-icon:hover .info-tooltip {
+        display: none;
+    }
+    
+    .info-icon:active .info-tooltip {
+        display: block;
+        position: fixed;
+        bottom: 20%;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 90%;
+        max-width: 300px;
+        z-index: 1000;
+        background: var(--background-primary);
+        border: 1px solid var(--border-light);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+}
+
+@media (max-width: 768px) {
+    .actions {
+        position: sticky;
+        bottom: 0;
+        background: var(--background-secondary);
+        padding: var(--space-md);
+        margin: 0 -var(--space-lg);
+        border-top: 1px solid var(--border-light);
+        box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.1);
+        z-index: 10;
+    }
+} 
