@@ -339,21 +339,50 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function formatDebugInfo(inputs, output) {
         let info = "--- DEBUG INFO ---\n\n";
-        info += "--- INPUTS ---\n";
-        for (const [key, value] of Object.entries(inputs)) {
-            info += `${key}: ${value}\n`;
+        
+        // Clinical Inputs
+        info += "--- CLINICAL INPUTS ---\n";
+        info += `Age: ${inputs.age}\n`;
+        info += `Sex: ${inputs.sex}\n`;
+        
+        // Symptoms & History
+        info += "\n--- SYMPTOMS & HISTORY ---\n";
+        info += `Rectal Bleeding: ${inputs.rectal_bleeding}\n`;
+        info += `Change in Bowel Habit: ${inputs.bowel_habit}\n`;
+        info += `Iron Deficiency Anemia: ${inputs.ida}\n`;
+        info += `Unexplained Weight Loss: ${inputs.weightloss}\n`;
+        info += `History of Polyps: ${inputs.polyp}\n`;
+        info += `IBD History: ${inputs.ibd}\n`;
+        info += `Post-surgical Surveillance: ${inputs.surveillance}\n`;
+        if (inputs.surveillance === "Yes") {
+            info += `Last Scope Date: ${inputs.last_scope_date || 'Not specified'}\n`;
         }
-        info += "\n--- OUTPUT ---\n";
+        info += `Family History: ${inputs.family}\n`;
+        
+        // Fitness Assessment
+        info += "\n--- FITNESS ASSESSMENT ---\n";
+        info += `Cognition OK for prep: ${inputs.cognition}\n`;
+        info += `Severe Comorbidities: ${inputs.comorbidity}\n`;
+        info += `Can tolerate bowel prep: ${inputs.prep}\n`;
+        info += `High sedation risk: ${inputs.sedation}\n`;
+        info += `ECOG Status: ${inputs.ecog}\n`;
+        
+        // Output Details
+        info += "\n--- ASSESSMENT OUTCOME ---\n";
         info += `Reference #: ${output.ref}\n`;
         info += `Category: ${output.category}\n`;
-        info += `Emoji: ${output.emoji}\n\n`;
-        info += "Reasons:\n";
+        info += `Emoji: ${output.emoji}\n`;
+        
+        // Clinical Reasoning
+        info += "\nClinical Rationale:\n";
         output.reasons.forEach(r => info += `  - ${r}\n`);
+        
+        // Fitness Details
         info += "\nFitness Assessment:\n";
         output.fitness.forEach(f => info += `  - ${f.text}\n`);
         
         if (output.showBowelPrep) {
-            info += "\nBowel Prep Section: Visible\n";
+            info += "\nBowel Prep Instructions: Required\n";
         }
 
         return info;
@@ -439,21 +468,42 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         // --- Fitness Assessment (Independent Evaluation) ---
+        let fitnessIssues = [];
+        let criticalFitnessIssue = false;
+
         if (ecog >= 3) {
-            result.fitness.push({text: '❌ ECOG 3 or 4: Patient not suitable for colonoscopy. Recommendation: CT Colonography or palliative/supportive care.', type: 'critical'});
-        } else if (
-            cognition === "no" || 
-            comorbidity === "yes" || 
-            prep === "yes" || 
-            sedation === "yes"
-        ) {
-            result.fitness.push({text: '⚠️ One or more risks identified. Consider CTC or inpatient support.', type: 'warning'});
-        } else {
-            result.fitness.push({text: '✅ Patient appears fit for outpatient colonoscopy.', type: 'ok'});
+            fitnessIssues.push({text: '❌ ECOG 3 or 4: Patient not suitable for colonoscopy. Recommendation: CT Colonography or palliative/supportive care.', type: 'critical'});
+            criticalFitnessIssue = true;
+        } else if (ecog === 2) {
+            fitnessIssues.push({text: '⚠️ ECOG 2: Limited functional status. Consider CT Colonography as first-line investigation.', type: 'warning'});
         }
         
+        if (cognition === "no") {
+            fitnessIssues.push({text: '⚠️ Cognitive issues may affect bowel prep compliance. Consider inpatient admission or CT Colonography.', type: 'warning'});
+        }
+        
+        if (comorbidity === "yes") {
+            fitnessIssues.push({text: '⚠️ Significant comorbidities present. Consider risk-benefit assessment.', type: 'warning'});
+        }
+        
+        if (prep === "yes") {
+            fitnessIssues.push({text: '⚠️ Bowel prep tolerance concerns. Consider modified prep regime or CT Colonography.', type: 'warning'});
+        }
+        
+        if (sedation === "yes") {
+            fitnessIssues.push({text: '⚠️ High sedation risk identified. Anesthetic assessment may be required.', type: 'warning'});
+        }
+
+        // If there are multiple fitness issues or ECOG ≥ 2, modify the recommendation
+        if (criticalFitnessIssue || (fitnessIssues.length >= 2 && ecog >= 2)) {
+            result.category = result.category.replace("Colonoscopy", "Investigation");
+            result.reasons.add("⚠️ Due to fitness concerns, CT Colonography is recommended as first-line investigation.");
+        }
+
+        result.fitness = fitnessIssues;
+        
         // Final decision on showing the bowel prep section
-        result.showBowelPrep = colonoscopyIndicated && (ecog < 3);
+        result.showBowelPrep = colonoscopyIndicated && !criticalFitnessIssue;
 
         // If the patient is fit and requires a scope, trigger the email notification
         if (result.showBowelPrep) {
@@ -479,6 +529,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const isNotIndicated = result.category === "No Direct Access Procedure Indicated";
         const isColonoscopyRecommended = result.category.includes("Colonoscopy");
         const headerClass = isNotIndicated ? 'result-header-not-indicated' : '';
+        const hasFitnessIssues = result.fitness.length > 0;
 
         // Add fade-in animation
         resultContainer.classList.add('result-loading');
@@ -490,7 +541,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     ${result.category}
                 </h3>
                 ${isColonoscopyRecommended ? 
-                    '<div class="colonoscopy-recommendation"><strong>✓ COLONOSCOPY RECOMMENDED</strong></div>' : 
+                    `<div class="colonoscopy-recommendation">
+                        <strong>✓ COLONOSCOPY RECOMMENDED</strong>
+                        ${hasFitnessIssues ? '<div class="fitness-warning">⚠️ With Fitness Considerations</div>' : ''}
+                    </div>` : 
                     '<div class="no-colonoscopy"><strong>✗ NO COLONOSCOPY INDICATED</strong></div>'
                 }
                 <div class="result-metadata">

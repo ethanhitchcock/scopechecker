@@ -367,11 +367,14 @@ input[type="number"].error, input[type="date"].error {
         border-top: 1px solid var(--border-light);
         box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.1);
         z-index: 100;
+        display: flex;
+        gap: var(--space-sm);
     }
     
     .actions .btn {
         flex: 1;
         min-width: unset;
+        margin: 0;
     }
 }
 
@@ -406,6 +409,13 @@ input[type="number"].error, input[type="date"].error {
     font-size: var(--fs-body);
     border: 2px solid var(--success-text);
     max-width: 300px;
+}
+
+.fitness-warning {
+    font-size: var(--fs-small);
+    color: var(--warning-text);
+    margin-top: var(--space-xs);
+    font-weight: var(--fw-medium);
 }
 
 .no-colonoscopy {
