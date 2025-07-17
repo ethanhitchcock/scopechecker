@@ -468,63 +468,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Enhanced Result Display ---
     function enhanceResultDisplay(result, inputs) {
-        const confidence = calculateConfidence(result, inputs);
-        const timeline = getExpectedTimeline(result.category);
-        
         return {
             ...result,
-            confidence,
-            timeline,
             timestamp: new Date().toLocaleString()
         };
-    }
-
-    function calculateConfidence(result, inputs) {
-        const age = parseInt(inputs.age, 10);
-        let confidenceFactors = [];
-        
-        // High confidence indicators
-        if (result.category === "Urgent Colonoscopy Recommended") {
-            confidenceFactors.push('high');
-        }
-        
-        // Check for clear-cut criteria
-        if (inputs.rectal_bleeding === "Yes" && inputs.ida === "Yes") {
-            confidenceFactors.push('high');
-        }
-        
-        // Age-related confidence
-        if (age >= 50 && (inputs.rectal_bleeding === "Yes" || inputs.bowel_habit === "Yes")) {
-            confidenceFactors.push('high');
-        }
-        
-        // Borderline cases
-        if (age < 50 && result.category !== "No Direct Access Procedure Indicated") {
-            confidenceFactors.push('moderate');
-        }
-        
-        if (inputs.surveillance === "Yes") {
-            confidenceFactors.push('high');
-        }
-        
-        // Determine overall confidence
-        const highCount = confidenceFactors.filter(f => f === 'high').length;
-        const moderateCount = confidenceFactors.filter(f => f === 'moderate').length;
-        
-        if (highCount > 0) return 'High';
-        if (moderateCount > 0) return 'Moderate';
-        return 'Standard';
-    }
-
-    function getExpectedTimeline(category) {
-        const timelines = {
-            "Urgent Colonoscopy Recommended": "Within 2 weeks",
-            "Routine Colonoscopy Recommended": "Within 6 weeks", 
-            "Routine Surveillance Colonoscopy": "As per protocol",
-            "No Direct Access Procedure Indicated": "Follow-up as needed"
-        };
-        
-        return timelines[category] || "Timeline not specified";
     }
 
     // --- UI Display ---
@@ -547,32 +494,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     '<div class="no-colonoscopy"><strong>✗ NO COLONOSCOPY INDICATED</strong></div>'
                 }
                 <div class="result-metadata">
-                    <p class="reference-number">Reference: #${result.ref}</p>
+                    <p class="reference-number">Reference: <strong>#${result.ref}</strong></p>
                     <p class="result-timestamp">${result.timestamp}</p>
                 </div>
                 <div class="reference-instruction">
-                    <strong>⚠️ IMPORTANT:</strong> Save this reference number (#${result.ref}) for future use and medical records.
+                    <strong>⚠️ IMPORTANT:</strong> Save this reference number <strong>(#${result.ref})</strong> for reference when booking the procedure.
                 </div>
             </div>
             `;
-
-        // Add confidence and timeline if available
-        if (result.confidence || result.timeline) {
-            html += '<div class="result-summary-section">';
-            if (result.confidence) {
-                html += `<div class="confidence-indicator confidence-${result.confidence.toLowerCase()}">
-                    <span class="confidence-label">Confidence:</span>
-                    <span class="confidence-value">${result.confidence}</span>
-                </div>`;
-            }
-            if (result.timeline) {
-                html += `<div class="timeline-indicator">
-                    <span class="timeline-label">Expected Timeline:</span>
-                    <span class="timeline-value">${result.timeline}</span>
-                </div>`;
-            }
-            html += '</div>';
-        }
 
         if (result.reasons.length > 0) {
             html += '<div class="rationale-section"><h4>Clinical Rationale</h4><ul>';

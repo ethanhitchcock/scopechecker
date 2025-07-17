@@ -446,46 +446,17 @@ input[type="number"].error, input[type="date"].error {
     margin: 0;
 }
 
-.result-summary-section {
-    display: none; /* Hide confidence and timeline section */
-}
-
-.confidence-indicator, .timeline-indicator {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    padding: var(--space-sm);
-    border-radius: var(--radius-sm);
-    background: var(--background-secondary);
-    box-shadow: 0 2px 4px var(--card-shadow);
-    min-width: 120px;
-}
-
-.confidence-label, .timeline-label {
-    font-size: var(--fs-caption);
-    color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-bottom: var(--space-xs);
-}
-
-.confidence-value, .timeline-value {
-    font-size: var(--fs-body);
-    font-weight: var(--fw-medium);
-    color: var(--text-primary);
-}
-
-.confidence-high .confidence-value {
-    color: var(--success-text);
-}
-
-.confidence-moderate .confidence-value {
-    color: var(--warning-text);
-}
-
+.result-summary-section,
+.confidence-indicator,
+.timeline-indicator,
+.confidence-label,
+.timeline-label,
+.confidence-value,
+.timeline-value,
+.confidence-high .confidence-value,
+.confidence-moderate .confidence-value,
 .confidence-standard .confidence-value {
-    color: var(--text-primary);
+    display: none;
 }
 
 .rationale-section, .fitness-section {
