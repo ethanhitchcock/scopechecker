@@ -14,7 +14,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Initialize Form Enhancements ---
     initializeFormValidation();
-    initializeProgressiveDisclosure();
     initializeAccessibilityFeatures();
 
     // --- Form Validation System ---
@@ -150,94 +149,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- Progressive Disclosure System ---
-    function initializeProgressiveDisclosure() {
-        const sections = document.querySelectorAll('.card');
-        const progressBar = createProgressBar();
-        
-        // Initialize section states
-        sections.forEach((section, index) => {
-            section.setAttribute('data-section-index', index);
-            if (index > 0) {
-                section.classList.add('section-disabled');
-            }
-        });
-
-        // Monitor form completion
-        form.addEventListener('change', () => {
-            updateSectionStates();
-            updateProgress();
-        });
-
-        form.addEventListener('input', () => {
-            updateProgress();
-        });
-    }
-
-    function createProgressBar() {
-        const progressContainer = document.createElement('div');
-        progressContainer.className = 'progress-container';
-        progressContainer.innerHTML = `
-            <div class="progress-bar">
-                <div class="progress-fill" id="progress-fill"></div>
-            </div>
-            <span class="progress-text" id="progress-text">0% Complete</span>
-        `;
-        
-        const header = document.querySelector('header');
-        header.appendChild(progressContainer);
-        
-        return progressContainer;
-    }
-
-    function updateSectionStates() {
-        const sections = document.querySelectorAll('.card');
-        
-        sections.forEach((section, index) => {
-            const isComplete = isSectionComplete(section);
-            const nextSection = sections[index + 1];
-            
-            if (isComplete) {
-                section.classList.add('section-complete');
-                if (nextSection) {
-                    nextSection.classList.remove('section-disabled');
-                }
-            }
-        });
-    }
-
-    function isSectionComplete(section) {
-        const requiredInputs = section.querySelectorAll('input[required]');
-        const radioGroups = new Set();
-        
-        // Collect unique radio groups in this section
-        section.querySelectorAll('input[type="radio"]').forEach(radio => {
-            radioGroups.add(radio.name);
-        });
-        
-        // Check required inputs
-        const requiredComplete = Array.from(requiredInputs).every(input => 
-            input.type === 'radio' ? 
-                document.querySelector(`input[name="${input.name}"]:checked`) : 
-                input.value.trim() !== ''
-        );
-        
-        return requiredComplete;
-    }
-
-    function updateProgress() {
-        const totalSections = document.querySelectorAll('.card').length;
-        const completeSections = document.querySelectorAll('.card.section-complete').length;
-        const percentage = Math.round((completeSections / totalSections) * 100);
-        
-        const progressFill = document.getElementById('progress-fill');
-        const progressText = document.getElementById('progress-text');
-        
-        if (progressFill && progressText) {
-            progressFill.style.width = `${percentage}%`;
-            progressText.textContent = `${percentage}% Complete`;
-        }
-    }
+    // Progressive disclosure system removed completely
 
     // --- Accessibility Features ---
     function initializeAccessibilityFeatures() {
@@ -618,6 +530,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- UI Display ---
     function displayResult(result) {
         const isNotIndicated = result.category === "No Direct Access Procedure Indicated";
+        const isColonoscopyRecommended = result.category.includes("Colonoscopy");
         const headerClass = isNotIndicated ? 'result-header-not-indicated' : '';
 
         // Add fade-in animation
@@ -629,9 +542,16 @@ document.addEventListener('DOMContentLoaded', () => {
                     <span class="emoji">${result.emoji}</span>
                     ${result.category}
                 </h3>
+                ${isColonoscopyRecommended ? 
+                    '<div class="colonoscopy-recommendation"><strong>✓ COLONOSCOPY RECOMMENDED</strong></div>' : 
+                    '<div class="no-colonoscopy"><strong>✗ NO COLONOSCOPY INDICATED</strong></div>'
+                }
                 <div class="result-metadata">
-                    <p class="reference-number">Ref: #${result.ref}</p>
+                    <p class="reference-number">Reference: #${result.ref}</p>
                     <p class="result-timestamp">${result.timestamp}</p>
+                </div>
+                <div class="reference-instruction">
+                    <strong>⚠️ IMPORTANT:</strong> Save this reference number (#${result.ref}) for future use and medical records.
                 </div>
             </div>
             `;
@@ -714,9 +634,9 @@ document.addEventListener('DOMContentLoaded', () => {
             if (response.ok) {
                 console.log('Email notification sent successfully.');
                 emailSuccessEl.innerHTML = `
-                    <h4>Email Sent</h4>
-                    <p>A referral summary for <strong>Ref: #${result.ref}</strong> has been sent.</p>
-                    <p><strong>Action Required:</strong> Please save this reference number for your records.</p>
+                    <h4>✅ Assessment Saved & Emailed</h4>
+                    <p>Assessment <strong>#${result.ref}</strong> has been saved and emailed to clinical team.</p>
+                    <p><strong>Action:</strong> Save reference #${result.ref} for future medical appointments.</p>
                 `;
                 emailSuccessEl.className = 'email-success-notification visible';
             } else {
@@ -727,8 +647,18 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } catch (error) {
             console.error('Error calling email function:', error);
-            emailSuccessEl.innerHTML = '<h4>Error</h4><p>Could not contact email server. Please check your connection.</p>';
-            emailSuccessEl.className = 'email-success-notification error visible';
+            // Show different message for local vs deployed
+            if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                emailSuccessEl.innerHTML = `
+                    <h4>📋 Assessment Saved (Local Mode)</h4>
+                    <p>Assessment <strong>#${result.ref}</strong> has been generated and saved.</p>
+                    <p><strong>Note:</strong> Email functionality requires deployment. Reference number saved for records.</p>
+                `;
+                emailSuccessEl.className = 'email-success-notification visible';
+            } else {
+                emailSuccessEl.innerHTML = '<h4>❌ Assessment Error</h4><p>Could not save or email assessment. Please try again or contact support.</p>';
+                emailSuccessEl.className = 'email-success-notification error visible';
+            }
         }
     }
 
