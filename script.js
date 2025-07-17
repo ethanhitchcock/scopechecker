@@ -12,18 +12,379 @@ document.addEventListener('DOMContentLoaded', () => {
     let lastInputs = {};
     let lastResult = {};
 
+    // --- Initialize Form Enhancements ---
+    initializeFormValidation();
+    initializeProgressiveDisclosure();
+    initializeAccessibilityFeatures();
+
+    // --- Form Validation System ---
+    function initializeFormValidation() {
+        const ageInput = document.getElementById('age');
+        
+        // Real-time age validation
+        ageInput.addEventListener('input', (e) => {
+            validateAgeInput(e.target);
+        });
+
+        ageInput.addEventListener('blur', (e) => {
+            validateAgeInput(e.target);
+        });
+
+        // Add required field indicators
+        addRequiredFieldIndicators();
+        
+        // Form submission validation
+        form.addEventListener('submit', (e) => {
+            if (!validateForm()) {
+                e.preventDefault();
+                showValidationErrors();
+                return;
+            }
+        });
+
+        // Reset confirmation
+        const resetBtn = form.querySelector('button[type="reset"]');
+        resetBtn.addEventListener('click', (e) => {
+            if (!confirmFormReset()) {
+                e.preventDefault();
+            }
+        });
+    }
+
+    function validateAgeInput(input) {
+        const age = parseInt(input.value);
+        const errorContainer = getOrCreateErrorContainer(input);
+        
+        if (input.value === '') {
+            showFieldError(input, errorContainer, 'Age is required');
+            return false;
+        }
+        
+        if (isNaN(age) || age < 1 || age > 120) {
+            showFieldError(input, errorContainer, 'Please enter a valid age (1-120)');
+            return false;
+        }
+        
+        hideFieldError(input, errorContainer);
+        return true;
+    }
+
+    function validateForm() {
+        const ageInput = document.getElementById('age');
+        let isValid = true;
+
+        // Validate age
+        if (!validateAgeInput(ageInput)) {
+            isValid = false;
+        }
+
+        // Ensure at least one radio button is selected in each required group
+        const requiredGroups = ['sex'];
+        requiredGroups.forEach(groupName => {
+            const radios = document.querySelectorAll(`input[name="${groupName}"]`);
+            const isSelected = Array.from(radios).some(radio => radio.checked);
+            if (!isSelected) {
+                showGroupError(radios[0], `Please select an option for ${groupName}`);
+                isValid = false;
+            }
+        });
+
+        return isValid;
+    }
+
+    function addRequiredFieldIndicators() {
+        const requiredFields = document.querySelectorAll('input[required]');
+        requiredFields.forEach(field => {
+            const label = document.querySelector(`label[for="${field.id}"]`) || 
+                         field.closest('.form-group').querySelector('label');
+            if (label && !label.querySelector('.required-indicator')) {
+                const indicator = document.createElement('span');
+                indicator.className = 'required-indicator';
+                indicator.textContent = ' *';
+                label.appendChild(indicator);
+            }
+        });
+    }
+
+    function getOrCreateErrorContainer(input) {
+        const formGroup = input.closest('.form-group');
+        let errorContainer = formGroup.querySelector('.error-message');
+        
+        if (!errorContainer) {
+            errorContainer = document.createElement('div');
+            errorContainer.className = 'error-message';
+            formGroup.appendChild(errorContainer);
+        }
+        
+        return errorContainer;
+    }
+
+    function showFieldError(input, errorContainer, message) {
+        input.classList.add('error');
+        errorContainer.textContent = message;
+        errorContainer.style.display = 'block';
+    }
+
+    function hideFieldError(input, errorContainer) {
+        input.classList.remove('error');
+        errorContainer.textContent = '';
+        errorContainer.style.display = 'none';
+    }
+
+    function showGroupError(firstRadio, message) {
+        const formGroup = firstRadio.closest('.form-group');
+        const errorContainer = getOrCreateErrorContainer(firstRadio);
+        formGroup.classList.add('error');
+        errorContainer.textContent = message;
+        errorContainer.style.display = 'block';
+    }
+
+    function confirmFormReset() {
+        return confirm('Are you sure you want to reset all form data? This action cannot be undone.');
+    }
+
+    function showValidationErrors() {
+        const firstError = document.querySelector('.error-message:not([style*="none"])');
+        if (firstError) {
+            firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    }
+
+    // --- Progressive Disclosure System ---
+    function initializeProgressiveDisclosure() {
+        const sections = document.querySelectorAll('.card');
+        const progressBar = createProgressBar();
+        
+        // Initialize section states
+        sections.forEach((section, index) => {
+            section.setAttribute('data-section-index', index);
+            if (index > 0) {
+                section.classList.add('section-disabled');
+            }
+        });
+
+        // Monitor form completion
+        form.addEventListener('change', () => {
+            updateSectionStates();
+            updateProgress();
+        });
+
+        form.addEventListener('input', () => {
+            updateProgress();
+        });
+    }
+
+    function createProgressBar() {
+        const progressContainer = document.createElement('div');
+        progressContainer.className = 'progress-container';
+        progressContainer.innerHTML = `
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress-fill"></div>
+            </div>
+            <span class="progress-text" id="progress-text">0% Complete</span>
+        `;
+        
+        const header = document.querySelector('header');
+        header.appendChild(progressContainer);
+        
+        return progressContainer;
+    }
+
+    function updateSectionStates() {
+        const sections = document.querySelectorAll('.card');
+        
+        sections.forEach((section, index) => {
+            const isComplete = isSectionComplete(section);
+            const nextSection = sections[index + 1];
+            
+            if (isComplete) {
+                section.classList.add('section-complete');
+                if (nextSection) {
+                    nextSection.classList.remove('section-disabled');
+                }
+            }
+        });
+    }
+
+    function isSectionComplete(section) {
+        const requiredInputs = section.querySelectorAll('input[required]');
+        const radioGroups = new Set();
+        
+        // Collect unique radio groups in this section
+        section.querySelectorAll('input[type="radio"]').forEach(radio => {
+            radioGroups.add(radio.name);
+        });
+        
+        // Check required inputs
+        const requiredComplete = Array.from(requiredInputs).every(input => 
+            input.type === 'radio' ? 
+                document.querySelector(`input[name="${input.name}"]:checked`) : 
+                input.value.trim() !== ''
+        );
+        
+        return requiredComplete;
+    }
+
+    function updateProgress() {
+        const totalSections = document.querySelectorAll('.card').length;
+        const completeSections = document.querySelectorAll('.card.section-complete').length;
+        const percentage = Math.round((completeSections / totalSections) * 100);
+        
+        const progressFill = document.getElementById('progress-fill');
+        const progressText = document.getElementById('progress-text');
+        
+        if (progressFill && progressText) {
+            progressFill.style.width = `${percentage}%`;
+            progressText.textContent = `${percentage}% Complete`;
+        }
+    }
+
+    // --- Accessibility Features ---
+    function initializeAccessibilityFeatures() {
+        enhanceKeyboardNavigation();
+        addAriaLabels();
+        improveFocusManagement();
+        addTooltips();
+    }
+
+    function enhanceKeyboardNavigation() {
+        // Add keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey || e.metaKey) {
+                switch(e.key) {
+                    case 'Enter':
+                        if (e.target.type !== 'submit') {
+                            e.preventDefault();
+                            const submitBtn = form.querySelector('button[type="submit"]');
+                            submitBtn.click();
+                        }
+                        break;
+                    case 'r':
+                        e.preventDefault();
+                        const resetBtn = form.querySelector('button[type="reset"]');
+                        resetBtn.click();
+                        break;
+                }
+            }
+        });
+
+        // Improve radio group navigation
+        const radioGroups = document.querySelectorAll('.radio-group, .radio-group-vertical');
+        radioGroups.forEach(group => {
+            const radios = group.querySelectorAll('input[type="radio"]');
+            radios.forEach((radio, index) => {
+                radio.addEventListener('keydown', (e) => {
+                    if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
+                        e.preventDefault();
+                        const nextRadio = radios[(index + 1) % radios.length];
+                        nextRadio.focus();
+                        nextRadio.checked = true;
+                        nextRadio.dispatchEvent(new Event('change', { bubbles: true }));
+                    } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
+                        e.preventDefault();
+                        const prevRadio = radios[(index - 1 + radios.length) % radios.length];
+                        prevRadio.focus();
+                        prevRadio.checked = true;
+                        prevRadio.dispatchEvent(new Event('change', { bubbles: true }));
+                    }
+                });
+            });
+        });
+    }
+
+    function addAriaLabels() {
+        // Add ARIA labels to form sections
+        const sections = document.querySelectorAll('.card');
+        sections.forEach((section, index) => {
+            const header = section.querySelector('.card-header h2');
+            if (header) {
+                const sectionId = `section-${index}`;
+                section.setAttribute('role', 'region');
+                section.setAttribute('aria-labelledby', sectionId);
+                header.id = sectionId;
+            }
+        });
+
+        // Add ARIA labels to radio groups
+        const radioGroups = document.querySelectorAll('.radio-group, .radio-group-vertical');
+        radioGroups.forEach((group, index) => {
+            group.setAttribute('role', 'radiogroup');
+            const label = group.previousElementSibling;
+            if (label && label.tagName === 'LABEL') {
+                const groupId = `radiogroup-${index}`;
+                group.setAttribute('aria-labelledby', groupId);
+                label.id = groupId;
+            }
+        });
+    }
+
+    function improveFocusManagement() {
+        // Skip links for accessibility
+        const skipLink = document.createElement('a');
+        skipLink.href = '#referral-form';
+        skipLink.textContent = 'Skip to main content';
+        skipLink.className = 'skip-link';
+        document.body.insertBefore(skipLink, document.body.firstChild);
+
+        // Focus management for dynamic content
+        const originalFocus = document.activeElement;
+        
+        // Restore focus after form submission
+        form.addEventListener('submit', () => {
+            setTimeout(() => {
+                const resultHeader = document.querySelector('#result-content h3');
+                if (resultHeader) {
+                    resultHeader.focus();
+                }
+            }, 100);
+        });
+    }
+
+    function addTooltips() {
+        const tooltipData = {
+            'ecog': 'ECOG Performance Status measures how well a patient can perform daily activities',
+            'ida': 'Iron Deficiency Anemia - low iron levels in blood',
+            'ibd': 'Inflammatory Bowel Disease (Crohn\'s or Ulcerative Colitis)',
+            'family': 'Family history categories based on NICE guidelines'
+        };
+
+        Object.entries(tooltipData).forEach(([fieldName, tooltip]) => {
+            const field = document.querySelector(`input[name="${fieldName}"]`);
+            if (field) {
+                const formGroup = field.closest('.form-group');
+                const label = formGroup.querySelector('label');
+                if (label) {
+                    const tooltipIcon = document.createElement('span');
+                    tooltipIcon.className = 'tooltip-icon';
+                    tooltipIcon.innerHTML = ' ⓘ';
+                    tooltipIcon.title = tooltip;
+                    tooltipIcon.setAttribute('aria-label', tooltip);
+                    label.appendChild(tooltipIcon);
+                }
+            }
+        });
+    }
+
     // --- Form Submission ---
     form.addEventListener('submit', (e) => {
         e.preventDefault();
+        
+        // Enhanced form submission with validation
+        if (!validateForm()) {
+            showValidationErrors();
+            return;
+        }
+        
         const formData = new FormData(form);
         const values = Object.fromEntries(formData.entries());
         
         const result = assessReferral(values);
+        const enhancedResult = enhanceResultDisplay(result, values);
         
         lastInputs = values;
-        lastResult = result;
+        lastResult = enhancedResult;
 
-        displayResult(result);
+        displayResult(enhancedResult);
         
         resultContainer.style.display = 'block';
         resultFooter.style.display = 'block';
@@ -193,41 +554,138 @@ document.addEventListener('DOMContentLoaded', () => {
         return result;
     }
 
+    // --- Enhanced Result Display ---
+    function enhanceResultDisplay(result, inputs) {
+        const confidence = calculateConfidence(result, inputs);
+        const timeline = getExpectedTimeline(result.category);
+        
+        return {
+            ...result,
+            confidence,
+            timeline,
+            timestamp: new Date().toLocaleString()
+        };
+    }
+
+    function calculateConfidence(result, inputs) {
+        const age = parseInt(inputs.age, 10);
+        let confidenceFactors = [];
+        
+        // High confidence indicators
+        if (result.category === "Urgent Colonoscopy Recommended") {
+            confidenceFactors.push('high');
+        }
+        
+        // Check for clear-cut criteria
+        if (inputs.rectal_bleeding === "Yes" && inputs.ida === "Yes") {
+            confidenceFactors.push('high');
+        }
+        
+        // Age-related confidence
+        if (age >= 50 && (inputs.rectal_bleeding === "Yes" || inputs.bowel_habit === "Yes")) {
+            confidenceFactors.push('high');
+        }
+        
+        // Borderline cases
+        if (age < 50 && result.category !== "No Direct Access Procedure Indicated") {
+            confidenceFactors.push('moderate');
+        }
+        
+        if (inputs.surveillance === "Yes") {
+            confidenceFactors.push('high');
+        }
+        
+        // Determine overall confidence
+        const highCount = confidenceFactors.filter(f => f === 'high').length;
+        const moderateCount = confidenceFactors.filter(f => f === 'moderate').length;
+        
+        if (highCount > 0) return 'High';
+        if (moderateCount > 0) return 'Moderate';
+        return 'Standard';
+    }
+
+    function getExpectedTimeline(category) {
+        const timelines = {
+            "Urgent Colonoscopy Recommended": "Within 2 weeks",
+            "Routine Colonoscopy Recommended": "Within 6 weeks", 
+            "Routine Surveillance Colonoscopy": "As per protocol",
+            "No Direct Access Procedure Indicated": "Follow-up as needed"
+        };
+        
+        return timelines[category] || "Timeline not specified";
+    }
+
     // --- UI Display ---
     function displayResult(result) {
         const isNotIndicated = result.category === "No Direct Access Procedure Indicated";
         const headerClass = isNotIndicated ? 'result-header-not-indicated' : '';
 
+        // Add fade-in animation
+        resultContainer.classList.add('result-loading');
+
         let html = `
-            <h3 class="${headerClass}">
-                <span class="emoji">${result.emoji}</span>
-                ${result.category}
-            </h3>
-            <p class="reference-number">Ref: ${result.ref}</p>
+            <div class="result-header-section">
+                <h3 class="${headerClass}" tabindex="-1">
+                    <span class="emoji">${result.emoji}</span>
+                    ${result.category}
+                </h3>
+                <div class="result-metadata">
+                    <p class="reference-number">Ref: #${result.ref}</p>
+                    <p class="result-timestamp">${result.timestamp}</p>
+                </div>
+            </div>
             `;
 
+        // Add confidence and timeline if available
+        if (result.confidence || result.timeline) {
+            html += '<div class="result-summary-section">';
+            if (result.confidence) {
+                html += `<div class="confidence-indicator confidence-${result.confidence.toLowerCase()}">
+                    <span class="confidence-label">Confidence:</span>
+                    <span class="confidence-value">${result.confidence}</span>
+                </div>`;
+            }
+            if (result.timeline) {
+                html += `<div class="timeline-indicator">
+                    <span class="timeline-label">Expected Timeline:</span>
+                    <span class="timeline-value">${result.timeline}</span>
+                </div>`;
+            }
+            html += '</div>';
+        }
+
         if (result.reasons.length > 0) {
-            html += '<h4>Clinical Rationale</h4><ul>';
-            result.reasons.forEach(reason => {
-                html += `<li>${reason}</li>`;
+            html += '<div class="rationale-section"><h4>Clinical Rationale</h4><ul>';
+            result.reasons.forEach((reason, index) => {
+                html += `<li style="animation-delay: ${index * 0.1}s">${reason}</li>`;
             });
-            html += '</ul>';
+            html += '</ul></div>';
         }
 
         if (result.fitness.length > 0) {
-            html += '<h4>Fitness Summary</h4><ul>';
-            result.fitness.forEach(item => {
-                html += `<li class="${item.type}-item">${item.text}</li>`;
+            html += '<div class="fitness-section"><h4>Fitness Summary</h4><ul>';
+            result.fitness.forEach((item, index) => {
+                html += `<li class="${item.type}-item" style="animation-delay: ${(index + result.reasons.length) * 0.1}s">${item.text}</li>`;
             });
-            html += '</ul>';
+            html += '</ul></div>';
         }
         
         resultContentEl.innerHTML = html;
 
+        // Trigger animations
+        setTimeout(() => {
+            resultContainer.classList.remove('result-loading');
+            resultContainer.classList.add('result-visible');
+        }, 50);
+
         if (result.showBowelPrep) {
-            bowelPrepContainer.style.display = 'block';
+            setTimeout(() => {
+                bowelPrepContainer.style.display = 'block';
+                bowelPrepContainer.classList.add('prep-visible');
+            }, 300);
         } else {
             bowelPrepContainer.style.display = 'none';
+            bowelPrepContainer.classList.remove('prep-visible');
         }
     }
 
